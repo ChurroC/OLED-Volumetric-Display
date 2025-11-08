@@ -1,0 +1,16 @@
+Items:
+Waveshare 1.5in RGB OLED - It uses SPI - It uses the driver chip SSD1351 which is fastest for a color OLED but for industry really fast I could get a SSD1322 in grayscale
+Hosyond ESP32-S3 - It has 16mb flash and 8mb of PSRAM and ESP-S3 has a 80 Mhz for SPI
+# Could get FPGA which could easily do 100+ Mhz but hella hard to work with
+
+Code:
+Python:
+Need a script to break down 3d files into prerendered images to send or images to raw dara
+Also need script to cut blender into 360 images
+
+C++:
+Could use Adafruit plug in but it is slow
+We could isntead do a custom directly to SPI
+We could also do DMA (direct memory acces) which transfer the data without CPU so no waiting
+We could doubel buffering which I've seen before don't know if it applies
+We could use the direct hardware of SPI isntead of the software - since I think the ESP32 has dedicted SPI hardware which we can use instead of togglin the GPIO hella - but the adapfruit could use the hardware too but still overhead
