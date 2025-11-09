@@ -14,3 +14,12 @@ We could isntead do a custom directly to SPI
 We could also do DMA (direct memory acces) which transfer the data without CPU so no waiting
 We could doubel buffering which I've seen before don't know if it applies
 We could use the direct hardware of SPI isntead of the software - since I think the ESP32 has dedicted SPI hardware which we can use instead of togglin the GPIO hella - but the adapfruit could use the hardware too but still overhead
+
+TODO:
+set up env so only test has the adafruit libraries
+
+FPS Results:
+Pure Adafruit - 28.57
+
+Sites to use:
+https://learn.adafruit.com/adafruit-gfx-graphics-library/graphics-primitives - Adafruit GFX
