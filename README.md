@@ -15,6 +15,17 @@ We could also do DMA (direct memory acces) which transfer the data without CPU s
 We could doubel buffering which I've seen before don't know if it applies
 We could use the direct hardware of SPI isntead of the software - since I think the ESP32 has dedicted SPI hardware which we can use instead of togglin the GPIO hella - but the adapfruit could use the hardware too but still overhead
 
+
+
+Right now adafruit is what this does for example
+application - fillScreen(RED) - what we're going to draw
+driver / protocol - Adafruit_SSD1351 - how to talk to display controller
+Hardware - SPI - how to send bytes
+
+so for that driver / protocol we could do all the protocols like what the dc pins should be for command or data
+
+
+
 TODO:
 set up env so only test has the adafruit libraries
 
@@ -23,3 +34,5 @@ Pure Adafruit - 28.57
 
 Sites to use:
 https://learn.adafruit.com/adafruit-gfx-graphics-library/graphics-primitives - Adafruit GFX
+https://www.circuitbasics.com/basics-of-the-spi-communication-protocol/ - Basics of SPI
+https://youtu.be/0nVNwozXsIc?si=CIpX_w9Aohazvl-p - Also even better idea of SPI
