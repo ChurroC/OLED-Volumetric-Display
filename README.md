@@ -36,3 +36,5 @@ Sites to use:
 https://learn.adafruit.com/adafruit-gfx-graphics-library/graphics-primitives - Adafruit GFX
 https://www.circuitbasics.com/basics-of-the-spi-communication-protocol/ - Basics of SPI
 https://youtu.be/0nVNwozXsIc?si=CIpX_w9Aohazvl-p - Also even better idea of SPI
+https://linuxjedi.co.uk/how-to-use-the-ssd1351-oled-display/ - Setup
+https://www.mouser.com/datasheet/3/1574/1/esp32-s3-wroom-1_wroom-1u_datasheet_en.pdf - Datasheet

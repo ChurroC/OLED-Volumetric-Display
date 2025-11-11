@@ -9,7 +9,7 @@
 #define DC_PIN 13
 #define RST_PIN 14
 
-#define SPI_FREQ 40000000UL
+#define SPI_FREQ 39000000UL
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 128
@@ -69,8 +69,8 @@ void writeColor(uint16_t color, uint32_t numPixels) {
 
     // For each pixel we need to send the high byte then the low byte
     for (uint32_t i = 0; i < numPixels; i++) {
-        sendData(&hi, 1);
-        sendData(&lo, 1);
+        spi.write(hi);
+        spi.write(lo);
     }
 
     CS_DISABLE();
@@ -91,6 +91,12 @@ void writeColorArray(const uint16_t *colors, uint32_t numPixels) {
 }
 
 void ssd1351_init() {
+    // Initialize SPI hardware
+    // Parameters: (SCLK pin, MISO pin (unused=-1), MOSI pin, SS pin (unused=-1))
+    spi.begin(SCLK_PIN, -1, MOSI_PIN, -1);
+    // Set SPI settings ONCE at startup (since we only have one SPI device)
+    spi.beginTransaction(SPISettings(SPI_FREQ, MSBFIRST, SPI_MODE3));
+
     // --- Setup GPIO pins ---
     pinMode(CS_PIN, OUTPUT);
     pinMode(DC_PIN, OUTPUT);
@@ -98,6 +104,7 @@ void ssd1351_init() {
     digitalWrite(CS_PIN, HIGH);  // Start with display deselected
     digitalWrite(DC_PIN, HIGH);  // Default to data mode
     digitalWrite(RST_PIN, HIGH); // Not in reset
+    delay(20);
 
     // --- Hardware Reset Sequence ---
     // This physically resets the display controller
@@ -123,7 +130,7 @@ void ssd1351_init() {
 
     // Clock divider and oscillator frequency
     sendCommand(0xB3);
-    uint8_t clk[] = {0xF1}; // 0xF1 = fast refresh rate
+    uint8_t clk[] = {0xF0};
     sendData(clk, 1);
 
     // Multiplex ratio (number of rows)
@@ -149,19 +156,27 @@ void ssd1351_init() {
     uint8_t offset[] = {0x00};
     sendData(offset, 1);
 
+    // // Pre-charge voltage levels (affects refresh quality)
+    // sendCommand(0xB4);
+    // uint8_t prechg[] = {0xA0, 0xB5, 0x55};
+    // sendData(prechg, 3);
+
+    // GPIO configuration
+    sendCommand(0xB5);
+    uint8_t gpio[] = {0x00};
+    sendData(gpio, 1);
+
     // Function selection (enable internal voltage regulator)
     sendCommand(0xAB);
     uint8_t func[] = {0x01};
     sendData(func, 1);
 
-    // Pre-charge voltage levels (affects refresh quality)
-    sendCommand(0xB4);
-    uint8_t prechg[] = {0xA0, 0xB5, 0x55};
-    sendData(prechg, 3);
+    sendCommand(0xA6);
 
     // Contrast for R, G, B channels
     sendCommand(0xC1);
-    uint8_t contrast[] = {0xC8, 0x80, 0xC8}; // Red, Green, Blue
+    // uint8_t contrast[] = {0xC8, 0x80, 0xC8}; // Red, Green, Blue
+    uint8_t contrast[] = {0xFF, 0xFF, 0xFF}; // Red, Green, Blue
     sendData(contrast, 3);
 
     // Master contrast (overall brightness)
@@ -169,43 +184,64 @@ void ssd1351_init() {
     uint8_t vcom[] = {0x0F};
     sendData(vcom, 1);
 
-    // Pre-charge period
-    sendCommand(0xB1);
-    uint8_t phase[] = {0x32};
-    sendData(phase, 1);
+    // // Pre-charge period
+    // sendCommand(0xB1);
+    // uint8_t phase[] = {0x32};
+    // sendData(phase, 1);
 
-    // GPIO configuration
-    sendCommand(0xB5);
-    uint8_t gpio[] = {0x00};
-    sendData(gpio, 1);
+    // // Second pre-charge period
+    // sendCommand(0xB6);
+    // uint8_t prechg2[] = {0x01};
+    // sendData(prechg2, 1);
 
-    // Second pre-charge period
-    sendCommand(0xB6);
-    uint8_t prechg2[] = {0x01};
-    sendData(prechg2, 1);
+    sendCommand(0xB2);
+    uint8_t framerate[] = {0xA4, 0x00, 0x00};
+    sendData(framerate, 3);
 
     // Turn display ON
     sendCommand(0xAF);
+}
+
+void setWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
+    // Set column (X) address range
+    sendCommand(0x15);        // Column address command
+    uint8_t col[] = {x0, x1}; // Start column, End column
+    sendData(col, 2);
+
+    // Set row (Y) address range
+    sendCommand(0x75);        // Row address command
+    uint8_t row[] = {y0, y1}; // Start row, End row
+    sendData(row, 2);
+
+    // Prepare to write pixel data
+    sendCommand(0x5C); // Write to RAM command
 }
 
 void setup() {
     Serial.begin(115200);
     Serial.println("SSD1351 Direct SPI test (fixed)");
 
-    // Initialize SPI hardware
-    // Parameters: (SCLK pin, MISO pin (unused=-1), MOSI pin, SS pin (unused=-1))
-    spi.begin(SCLK_PIN, -1, MOSI_PIN, -1);
-
-    // Set SPI settings ONCE at startup (since we only have one SPI device)
-    spi.beginTransaction(SPISettings(SPI_FREQ, MSBFIRST, SPI_MODE0));
-
     // Initialize the display
     ssd1351_init();
     delay(50);
 
-    // Clear screen to black
-    writeColor(RED, SCREEN_WIDTH * SCREEN_HEIGHT);
-    delay(50);
+    // Fill entire screen with BLACK first
+    setWindow(0, 0, 127, 127);
+    writeColor(BLACK, 128 * 128);
+    delay(500);
+
+    // Top quarter: RED
+    setWindow(0, 0, 127, 31);
+    writeColor(RED, 128 * 32);
+    delay(500);
+
+    // Second quarter: BLUE
+    setWindow(0, 32, 127, 63);
+    writeColor(BLUE, 128 * 32);
+    delay(500);
 }
 
-void loop() { writeColor(RED, SCREEN_WIDTH * SCREEN_HEIGHT); }
+void loop() {
+
+    // writeColor(RED, SCREEN_WIDTH * SCREEN_HEIGHT);
+}
