@@ -19,6 +19,17 @@ CS: "Hey display, listen to me now!"
 DC: "This is a command" vs "This is pixel data"
 */
 
+/*
+Pin Colors
+GND - Black
+VCC - Red
+10 - Orange
+11 - Blue
+12 - Yellow
+13 - Green
+14 - White
+*/
+
 #define BLACK 0x0000
 #define BLUE 0x001F
 #define RED 0xF800
