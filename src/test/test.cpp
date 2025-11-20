@@ -10,7 +10,7 @@
 #define DC_PIN 13
 #define RST_PIN 14
 
-#define SPI_FREQ 39000000UL
+#define SPI_FREQ 30000000UL
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 128
@@ -72,6 +72,35 @@ void writeColor(uint16_t color, uint32_t numPixels) {
     for (uint32_t i = 0; i < numPixels; i++) {
         spi.write(hi);
         spi.write(lo);
+    }
+
+    CS_DISABLE();
+}
+
+void writeColorBuffer(uint16_t color, uint32_t numPixels) {
+    uint8_t hi = color >> 8;
+    uint8_t lo = color & 0xFF;
+
+    const size_t BUFFER_SIZE =
+        1024; // Buffer for 1024 pixels (2 bytes each) - Don't really matter since less is more call and more doesn't really help
+    uint8_t buffer[BUFFER_SIZE];
+
+    CS_ENABLE();
+    DC_DATA();
+
+    // We don't need to go through all pixel since they all the same just one buffer is good
+    for (size_t i = 0; i < BUFFER_SIZE; i += 2) {
+        buffer[i] = hi;
+        buffer[i + 1] = lo;
+    }
+
+    uint32_t bytesToSend = numPixels * 2;
+    while (bytesToSend >= BUFFER_SIZE) {
+        spi.writeBytes(buffer, BUFFER_SIZE);
+        bytesToSend -= BUFFER_SIZE;
+    }
+    if (bytesToSend > 0) {
+        spi.writeBytes(buffer, bytesToSend);
     }
 
     CS_DISABLE();
@@ -230,34 +259,33 @@ void setup() {
     // Fill entire screen with BLACK first
     setWindow(0, 0, 127, 127);
     writeColor(BLACK, 128 * 128);
-    delay(500);
+    delay(200);
 
     // Top quarter: RED
     setWindow(0, 0, 127, 31);
     writeColor(RED, 128 * 32);
-    delay(500);
+    delay(200);
 
     // Second quarter: BLUE
     setWindow(0, 32, 127, 63);
     writeColor(BLUE, 128 * 32);
-    delay(2000);
+    delay(500);
 
     setWindow(0, 0, 127, 127);
     writeColor(BLACK, 128 * 128);
-    // delay(500);
 
-    setWindow(0, 0, 127, 127);
+    setWindow(39, 39, 88, 88);
 }
 
 void loop() {
     unsigned long startTime = millis();
 
-    writeColor(RED, 128 * 128);
-    writeColor(BLUE, 128 * 128);
+    writeColorBuffer(RED, 50 * 50);
+    writeColorBuffer(BLUE, 50 * 50);
 
     unsigned long endTime = millis();
     float frameTime = endTime - startTime;
-    float fps = 2000.0 / frameTime; // 2 full screen updates
+    float fps = 2000.0 / frameTime;
 
     Serial.print("Screen FPS: ");
     Serial.println(fps);
@@ -265,7 +293,8 @@ void loop() {
     delay(1000);
 }
 
-// Bruh I got 23.26 FPS
+// 90.91 though with a buffer
+// I get 500 if I reduce from 128 by 128 to 50 by 50
 
 /*
 Reaons for this I can think of:
