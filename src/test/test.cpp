@@ -1,3 +1,4 @@
+// spi_fps.cpp
 // Custom Logic for sending data FPS
 
 #include <Arduino.h>
@@ -222,6 +223,7 @@ void setup() {
     Serial.println("SSD1351 Direct SPI test (fixed)");
 
     // Initialize the display
+    CS_ENABLE();
     ssd1351_init();
     delay(50);
 
@@ -238,10 +240,36 @@ void setup() {
     // Second quarter: BLUE
     setWindow(0, 32, 127, 63);
     writeColor(BLUE, 128 * 32);
-    delay(500);
+    delay(2000);
+
+    setWindow(0, 0, 127, 127);
+    writeColor(BLACK, 128 * 128);
+    // delay(500);
+
+    setWindow(0, 0, 127, 127);
 }
 
 void loop() {
+    unsigned long startTime = millis();
 
-    // writeColor(RED, SCREEN_WIDTH * SCREEN_HEIGHT);
+    writeColor(RED, 128 * 128);
+    writeColor(BLUE, 128 * 128);
+
+    unsigned long endTime = millis();
+    float frameTime = endTime - startTime;
+    float fps = 2000.0 / frameTime; // 2 full screen updates
+
+    Serial.print("Screen FPS: ");
+    Serial.println(fps);
+
+    delay(1000);
 }
+
+// Bruh I got 23.26 FPS
+
+/*
+Reaons for this I can think of:
+Do i really need to keep switching cs or should I keep it low the whole time
+DMA
+BUffer writes - if that's possible - since it does load lef tot right.
+*/
