@@ -1,5 +1,5 @@
+// Ball Animation Test
 // ball_test.cpp
-// Custom Logic for sending data FPS
 
 #include <Arduino.h>
 #include <SPI.h>
@@ -187,8 +187,11 @@ void setup() {
     // writeColorBuffer(BLUE, 128 * 32);
     // delay(500);
 
-    // setWindow(0, 0, 127, 127);
-    // writeColorBuffer(BLACK, 128 * 128);
+    setWindow(0, 0, 127, 127);
+    CS_ENABLE();
+    DC_DATA();
+    writeColorBuffer(BLACK, 128 * 128);
+    CS_DISABLE();
 }
 
 const uint8_t screenSize = 20;
@@ -219,12 +222,8 @@ void loop() {
         int dy = y - radius;
         int dy_squared = dy * dy;
 
-        // Find horizontal extent of circle at this row
-        int dx = 0;
-        while (dx * dx + dy_squared <= radius * radius) {
-            dx++;
-        }
-        dx--; // Step back to last valid position
+        // Calculate horizontal extent directly
+        int dx = (int)sqrt(radius * radius - dy_squared);
 
         // Draw the row
         int blackBefore = center - dx;
@@ -259,8 +258,5 @@ void loop() {
     col += screenSize / 15;
 }
 
-// Removed CS since it causes FPS to drop from around 5381 to 4300 - 20%ish
-// Need to change CS due to change from command to data mode for window to bytes to draw which gets fps to 4807
-// But if I move to the final buffer turns out that writing spi_write bytes requires me to do cs diable and enable every time to run
-// Need to figure out when to use CS_ENABLE and DISABLE correctly to minimize the use
+// Removed CS since it causes FPS to drop from around 4400 to 4200 - Which is good enough to work with
 // Also need to see if I can do a custom implemtaton of SPI with my custom DMA to further speed this up

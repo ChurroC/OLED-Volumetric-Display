@@ -1,4 +1,4 @@
-// Custom Logic for sending data FPS
+// SPI with no Adafruit Library
 // spi_fps.cpp
 
 #include <Arduino.h>
